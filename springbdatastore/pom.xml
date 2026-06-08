@@ -47,13 +47,22 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<!-- Starter for Google Cloud Support -->
 		<dependency>
 			<groupId>com.google.cloud</groupId>
 			<artifactId>spring-cloud-gcp-starter</artifactId>
-		</dependency>
-
+		</dependency>  
+        <!-- Add GCP Datastore Starter -->
+        <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>spring-cloud-gcp-starter-data-datastore</artifactId>
+        </dependency>
+        <!-- Add Spring Shell Starter -->
+        <dependency>
+                <groupId>org.springframework.shell</groupId>
+                <artifactId>spring-shell-starter</artifactId>
+                <version>3.0.2</version>
+        </dependency>
 		<!-- Essential for WAR packaging -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -84,7 +93,6 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
 
 	<build>
 		<plugins>
