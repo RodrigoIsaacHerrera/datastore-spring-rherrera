@@ -1,0 +1,21 @@
+# Spring Boot Datastore Sample
+
+This project is based on the Google Cloud Codelab "Spring Data and Cloud Datastore".
+
+## Overview
+
+- Spring Boot application using Google Cloud Datastore as the persistence layer.
+- Follows the codelab example for configuring Datastore, defining entities, and exposing REST endpoints.
+
+## Setup
+
+1. Enable Cloud Datastore in your Google Cloud project.
+2. Set `GOOGLE_APPLICATION_CREDENTIALS` to the path of your service account JSON key.
+3. Build and run the Spring Boot application.
+
+## Notes
+
+- This repository contains the sample code structure and configuration for the codelab.
+- Use the codelab link for step-by-step instructions and additional context.
+
+Codelab: https://codelabs.developers.google.com/codelabs/cloud-spring-datastore?hl=es-419#7
