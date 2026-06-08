@@ -2,13 +2,15 @@ package com.gcp.springbdatastore;
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
+
+import com.gcp.springbdatastore.entity.Book;
+import com.gcp.springbdatastore.repository.BookRepository;
+import com.google.common.collect.Lists;
 
 @ShellComponent
 @SpringBootApplication

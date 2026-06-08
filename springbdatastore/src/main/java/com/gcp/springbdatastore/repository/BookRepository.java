@@ -2,6 +2,7 @@ package com.gcp.springbdatastore.repository;
 
 import java.util.List;
 
+import com.gcp.springbdatastore.entity.Book;
 import com.google.cloud.spring.data.datastore.repository.DatastoreRepository;
 
 
