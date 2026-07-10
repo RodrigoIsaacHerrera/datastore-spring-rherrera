@@ -22,11 +22,13 @@ public class SpringbdatastoreApplication {
      SpringApplication.run(SpringbdatastoreApplication.class, args);
   }
 
-  @ShellMethod("Saves a book to Cloud Datastore: save-book <title> <author> <year>")
-  public String saveBook(String title, String author, int year) {
-     Book savedBook = this.bookRepository.save(new Book(title, author, year));
-     return savedBook.toString();
-  }
+  @ShellMethod("Saves a book to Cloud Datastore using JSON")
+public String saveBook(String jsonContent) throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    Book book = mapper.readValue(jsonContent, Book.class);
+    Book savedBook = this.bookRepository.save(book);
+    return savedBook.toString();
+}
 
   @ShellMethod("Loads all books")
   public String findAllBooks() {
