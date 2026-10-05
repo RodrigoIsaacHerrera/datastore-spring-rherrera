@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gcp.springbdatastore.entity.Book;
 import com.gcp.springbdatastore.repository.BookRepository;
 import com.google.common.collect.Lists;
