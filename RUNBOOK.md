@@ -1,48 +1,52 @@
-# Runbook: sincronizar ramas locales
+# Runbook: sincronizar y publicar ramas
 
-El script [`sync-branches.sh`](./sync-branches.sh) integra una rama objetivo en
-las demás ramas locales. Conserva los commits propios de cada rama mediante
-`git merge`; no reinicia ramas ni usa `git push --force`.
+La operación completa se ejecuta con [`sync-push.sh`](./sync-push.sh). Este
+orquesta [`sync-validate.sh`](./sync-validate.sh) y
+[`sync-branches.sh`](./sync-branches.sh) en ese orden: valida y empareja ramas,
+integra cambios localmente y luego publica.
 
 ## Requisitos
 
 - Ejecutar desde Git Bash con Bash instalado.
-- Estar dentro del repositorio Git.
-- Tener un árbol de trabajo limpio. Confirma o guarda aparte los cambios antes
-  de ejecutar el script.
-- La rama objetivo debe existir localmente.
-- Si hay un remoto llamado `origin`, el script actualiza sus referencias con
-  `git fetch origin --prune` e integra `origin/<rama-objetivo>` en la rama
-  objetivo local antes de propagarla.
+- Ejecutar desde un repositorio Git que tenga configurado el remoto indicado.
+- Tener el árbol de trabajo limpio y no tener un merge o rebase en curso.
+- La rama objetivo debe existir localmente o en el remoto.
 
 ## Uso
 
 ```bash
-# Integra main en todas las ramas locales y no publica cambios.
+# Solo valida las ramas y crea ramas locales de seguimiento donde falten.
+bash sync-validate.sh main
+
+# Sincroniza las ramas localmente, sin publicar.
 bash sync-branches.sh main
 
-# Integra develop en todas las ramas locales y luego las publica en origin.
-bash sync-branches.sh develop --push
+# Ejecuta la cadena completa contra origin: valida, sincroniza localmente y publica.
+bash sync-push.sh main
+
+# Ejecuta la cadena completa usando otro remoto.
+bash sync-push.sh develop upstream
 ```
 
-Reemplaza `main` o `develop` por cualquier rama objetivo local. La opción
-`--push` es opcional y publica en `origin` todas las ramas locales que el script
-procesó. Sin esa opción, el script solo cambia las ramas locales.
+El remoto predeterminado es `origin`. Cambia `main` o `develop` por la rama que
+debe propagarse a las demás.
 
-## Qué hace el script
+## Cadena de ejecución
 
-1. Valida los argumentos y comprueba que se ejecuta dentro de un repositorio.
-2. Se detiene si el árbol de trabajo tiene cambios sin guardar o si la rama
-   objetivo no existe localmente.
-3. Guarda el nombre de la rama activa y actualiza las referencias remotas
-   disponibles.
-4. Integra `origin/<rama-objetivo>` en la rama objetivo local, si existe.
-5. Cambia a cada rama local y ejecuta `git merge <rama-objetivo>`. Los commits
-   que solo existan en esa rama se conservan.
-6. Vuelve a la rama que estaba activa al inicio.
-7. Si se indicó `--push`, publica las ramas procesadas sin forzar los pushes.
+1. **`sync-push.sh <rama-objetivo> [remoto]`** valida argumentos y llama los
+   siguientes scripts.
+2. **`sync-validate.sh`** hace fetch y prune del remoto. Si hay una rama remota
+   sin contraparte local, crea una rama local con seguimiento. Si hay una rama
+   solo local, la deja lista para que el push cree su contraparte remota.
+3. **`sync-branches.sh <rama-objetivo> [remoto]`** integra en cada rama local
+   tanto su contraparte remota como la rama objetivo, preservando commits por
+   medio de merge.
+4. **`sync-branches.sh <rama-objetivo> <remoto> --push`** repite la comprobación
+   de actualizaciones remotas y publica todas las ramas procesadas. No utiliza
+   `--force`.
 
-Los pasos también están comentados directamente en el script.
+Las ramas `backup-*` y `backup/*` se excluyen de la sincronización y publicación
+masivas para preservar respaldos locales.
 
 ## Si ocurre un conflicto
 
@@ -59,21 +63,28 @@ git add <archivos-resueltos>
 git commit
 ```
 
-Cuando todos los conflictos estén resueltos y el árbol vuelva a estar limpio,
-vuelve a ejecutar el script con la misma rama objetivo. Las ramas procesadas
-antes del conflicto ya tendrán el merge aplicado; Git indicará que están
-actualizadas.
+Después de resolverlo y confirmar que el árbol está limpio, vuelve a ejecutar
+`bash sync-push.sh <rama-objetivo> [remoto]`. Las ramas procesadas antes del
+conflicto ya tendrán sus merges aplicados.
+
+Si el push falla por un rechazo non-fast-forward, el remoto recibió commits
+nuevos durante la operación. No uses force-push; vuelve a ejecutar el script
+después de revisar el rechazo. Si un push fue aceptado antes de que otro
+fallara, la siguiente ejecución vuelve a integrar esas actualizaciones.
 
 ## Verificar los resultados
 
 ```bash
-# Muestra el estado de cada rama local respecto de su rama remota configurada.
+# Muestra el seguimiento y el ahead/behind de ramas locales.
 git branch -vv
 
-# Compara commits exclusivos entre dos ramas locales.
+# Cuenta commits exclusivos entre dos ramas locales.
 git rev-list --left-right --count rama-a...rama-b
+
+# Compara las puntas de las ramas locales después del proceso.
+git for-each-ref --format='%(refname:short) %(objectname:short)' refs/heads/
 ```
 
-Con la estrategia de merge, las ramas incorporan los commits de la rama
-objetivo, pero pueden conservar commits propios y por ello no necesariamente
-terminan en el mismo hash.
+Con la estrategia de merge, cada rama incorpora la rama objetivo y su
+contraparte remota, pero puede conservar commits propios; por eso no todas
+necesariamente terminan con el mismo hash.
