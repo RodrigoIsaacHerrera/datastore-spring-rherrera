@@ -46,7 +46,9 @@ debe propagarse a las demás.
    `--force`.
 
 Las ramas `backup-*` y `backup/*` se excluyen de la sincronización y publicación
-masivas para preservar respaldos locales.
+masivas para preservar respaldos locales. También se omite una rama local que
+tenga el mismo nombre que el remoto (por ejemplo, una rama local `origin` cuando
+el remoto también se llama `origin`), porque puede colisionar al cambiar de rama.
 
 ## Si ocurre un conflicto
 

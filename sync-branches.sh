@@ -14,7 +14,8 @@ Ejemplos:
 
 Sin --push, integra los cambios localmente.
 Con --push, publica todas las ramas locales sincronizadas en el remoto.
-Las ramas backup-* y backup/* se excluyen del proceso.
+Las ramas backup-*, backup/* y la rama local con el mismo nombre que el remoto
+se excluyen del proceso.
 EOF
 }
 
@@ -96,18 +97,20 @@ if ! git show-ref --verify --quiet "refs/heads/$target"; then
   exit 1
 fi
 
-# Construye la lista de ramas normales; se excluyen explícitamente las de respaldo.
+# Construye la lista de ramas normales; excluye respaldos y el nombre reservado
+# del remoto para evitar que `git switch` lo confunda con una referencia remota.
 branches=()
 while IFS= read -r branch; do
+  branch=${branch#refs/heads/}
   case "$branch" in
-    backup-*|backup/*)
-      printf 'Omitiendo rama de respaldo: %s\n' "$branch"
+    "$remote"|backup-*|backup/*)
+      printf 'Omitiendo rama reservada o de respaldo: %s\n' "$branch"
       ;;
     *)
       branches+=("$branch")
       ;;
   esac
-done < <(git for-each-ref --format='%(refname:short)' refs/heads/)
+done < <(git for-each-ref --format='%(refname)' refs/heads/)
 
 # Integra primero los commits que existan en la rama objetivo del remoto.
 if git show-ref --verify --quiet "refs/remotes/$remote/$target"; then

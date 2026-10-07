@@ -56,13 +56,14 @@ git fetch "$remote" --prune
 remote_refs=()
 while IFS= read -r ref; do
   remote_refs+=("$ref")
-done < <(git for-each-ref --format='%(refname:short)' "refs/remotes/$remote")
+done < <(git for-each-ref --format='%(refname)' "refs/remotes/$remote")
 
 for ref in "${remote_refs[@]}"; do
-  branch=${ref#"$remote"/}
+  branch=${ref#"refs/remotes/$remote"/}
+  branch=${branch#/}
 
-  # Omite la referencia simbólica HEAD y las ramas de respaldo.
-  if [[ $branch == HEAD || $branch == backup-* || $branch == backup/* ]]; then
+  # Omite HEAD, los respaldos y el nombre que colisiona con el remoto.
+  if [[ $branch == HEAD || $branch == "$remote" || $branch == backup-* || $branch == backup/* ]]; then
     continue
   fi
 
@@ -71,7 +72,7 @@ for ref in "${remote_refs[@]}"; do
     git branch --track "$branch" "$ref"
   else
     # Configura seguimiento solo cuando la rama todavía no tiene upstream.
-    upstream=$(git for-each-ref --format='%(upstream:short)' "refs/heads/$branch")
+    upstream=$(git for-each-ref --format='%(upstream)' "refs/heads/$branch")
     if [[ -z $upstream ]]; then
       git branch --set-upstream-to="$ref" "$branch"
     fi
@@ -87,8 +88,9 @@ fi
 
 # Informa de ramas locales que aún no tienen pareja remota; sync-push las publicará.
 while IFS= read -r branch; do
+  branch=${branch#refs/heads/}
   case "$branch" in
-    backup-*|backup/*)
+    "$remote"|backup-*|backup/*)
       continue
       ;;
   esac
@@ -96,6 +98,6 @@ while IFS= read -r branch; do
   if ! git show-ref --verify --quiet "refs/remotes/$remote/$branch"; then
     printf 'Rama solo local; se creará en "%s" durante el push: %s\n' "$remote" "$branch"
   fi
-done < <(git for-each-ref --format='%(refname:short)' refs/heads/)
+done < <(git for-each-ref --format='%(refname)' refs/heads/)
 
 printf 'Validación completada para "%s" y remoto "%s".\n' "$target" "$remote"
